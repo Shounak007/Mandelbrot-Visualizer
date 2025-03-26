@@ -11,10 +11,13 @@ body {
     top: 20px;
     left: 20px;
     z-index: 1000;
+    display: flex;
+    gap: 10px;
 }
 
-.portfolio-link {
-    display: inline-block;
+.portfolio-link, .github-link {
+    display: inline-flex;
+    align-items: center;
     padding: 8px 16px;
     background-color: #64ffda;
     color: #0a192f;
@@ -24,8 +27,14 @@ body {
     transition: background-color 0.3s;
 }
 
-.portfolio-link:hover {
+.portfolio-link:hover, .github-link:hover {
     background-color: #4cd8b2;
+}
+
+.github-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
 }
 
 .container {
