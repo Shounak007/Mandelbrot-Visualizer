@@ -17,14 +17,14 @@
     <div class="container">
         <h1>Interactive Fractal Explorer</h1>
         <div class="view-controls">
-            <button id="mandelbrotOnly" class="view-btn active">Mandelbrot Only</button>
-            <button id="juliaOnly" class="view-btn">Julia Only</button>
-            <button id="dualView" class="view-btn">Dual View</button>
+            <button id="mandelbrotOnly" class="view-btn active">Mandelbrot Set</button>
+            <button id="juliaOnly" class="view-btn">Julia Set</button>
         </div>
         <div class="controls">
             <div class="control-group">
                 <label for="maxIterations">Max Iterations:</label>
                 <input type="range" id="maxIterations" min="10" max="1000" value="100">
+                <span id="iterationValue">100</span>
             </div>
             <div class="control-group">
                 <label for="colorScheme">Color Scheme:</label>
@@ -32,11 +32,21 @@
                     <option value="rainbow">Rainbow</option>
                     <option value="blueFire">Blue Fire</option>
                     <option value="grayscale">Grayscale</option>
+                    <option value="plasma">Plasma</option>
+                    <option value="electric">Electric</option>
+                    <option value="cosmic">Cosmic</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="ocean">Ocean</option>
                 </select>
             </div>
             <div class="control-group">
                 <label>
                     <input type="checkbox" id="juliaLock"> Julia Lock
+                </label>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="smoothRendering" checked> Smooth Rendering
                 </label>
             </div>
             <button id="resetView" class="control-btn">Reset View</button>
@@ -56,13 +66,14 @@
         <div class="instructions">
             <h2>How to Use</h2>
             <ul>
-                <li>Switch between Mandelbrot, Julia, and Dual views using the buttons above</li>
+                <li>Switch between Mandelbrot and Julia views using the buttons above</li>
                 <li>Adjust the maximum iterations to control detail level</li>
                 <li>Choose different color schemes for visualization</li>
-                <li>Click and drag on the Mandelbrot set to pan</li>
+                <li>Click and drag on the fractal to pan</li>
                 <li>Use the mouse wheel to zoom in/out</li>
-                <li>Hover over the Julia set to update its parameters</li>
+                <li>Hover over the Mandelbrot set to update the Julia set parameters</li>
                 <li>Use the Julia Lock checkbox to freeze the Julia set parameters</li>
+                <li>Enable smooth rendering for better visual quality (may be slower)</li>
                 <li>Click Reset View to return to the initial view</li>
             </ul>
         </div>
