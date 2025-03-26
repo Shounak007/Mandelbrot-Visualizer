@@ -5,7 +5,7 @@ functions = "functions"
 
 [[redirects]]
 from = "/*"
-to = "/index.html"
+to = "/templates/index.html"
 status = 200
 
 [build.environment]
