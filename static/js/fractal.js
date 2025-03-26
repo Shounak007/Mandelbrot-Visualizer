@@ -20,7 +20,7 @@ const juliaCtx = juliaCanvas.getContext('2d');
 let currentView = 'mandelbrot';
 let isDragging = false;
 let startX, startY;
-let offsetX = 0, offsetY = 0;
+let centerX = 0, centerY = 0; // Center point in fractal coordinates
 let scale = 1;
 let isRendering = false;
 let iterationDisplay = document.getElementById('iterationValue');
@@ -104,11 +104,13 @@ mandelbrotCanvas.addEventListener('mousemove', (e) => {
     }
 });
 mandelbrotCanvas.addEventListener('mouseup', stopDrag);
+mandelbrotCanvas.addEventListener('mouseleave', stopDrag);
 mandelbrotCanvas.addEventListener('wheel', handleZoom);
 
 juliaCanvas.addEventListener('mousedown', startDrag);
 juliaCanvas.addEventListener('mousemove', drag);
 juliaCanvas.addEventListener('mouseup', stopDrag);
+juliaCanvas.addEventListener('mouseleave', stopDrag);
 juliaCanvas.addEventListener('wheel', handleZoom);
 
 // View management
@@ -128,17 +130,73 @@ function setView(view) {
     render();
 }
 
+// Convert screen coordinates to fractal coordinates
+function screenToFractal(canvas, screenX, screenY) {
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Normalize to [0,1]
+    const normalizedX = screenX / width;
+    const normalizedY = screenY / height;
+    
+    // Convert to fractal coordinates
+    const fractalX = centerX + (normalizedX - 0.5) * 4 / scale;
+    const fractalY = centerY + (normalizedY - 0.5) * 4 / scale;
+    
+    return { x: fractalX, y: fractalY };
+}
+
+// Convert fractal coordinates to screen coordinates
+function fractalToScreen(canvas, fractalX, fractalY) {
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Convert to normalized [0,1]
+    const normalizedX = ((fractalX - centerX) * scale / 4) + 0.5;
+    const normalizedY = ((fractalY - centerY) * scale / 4) + 0.5;
+    
+    // Convert to screen coordinates
+    const screenX = normalizedX * width;
+    const screenY = normalizedY * height;
+    
+    return { x: screenX, y: screenY };
+}
+
 // Drag and zoom handlers
 function startDrag(e) {
     isDragging = true;
-    startX = e.clientX - offsetX;
-    startY = e.clientY - offsetY;
+    startX = e.clientX;
+    startY = e.clientY;
+    const canvas = currentView === 'mandelbrot' ? mandelbrotCanvas : juliaCanvas;
+    
+    // Store the starting fractal coordinates
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Remember start coordinates for the current drag operation
+    startDragCoordinates = screenToFractal(canvas, mouseX, mouseY);
 }
 
 function drag(e) {
     if (!isDragging) return;
-    offsetX = e.clientX - startX;
-    offsetY = e.clientY - startY;
+    
+    const canvas = currentView === 'mandelbrot' ? mandelbrotCanvas : juliaCanvas;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Calculate current fractal coordinates under the mouse
+    const currentCoords = screenToFractal(canvas, mouseX, mouseY);
+    
+    // Calculate the difference in fractal coordinates
+    const deltaX = currentCoords.x - startDragCoordinates.x;
+    const deltaY = currentCoords.y - startDragCoordinates.y;
+    
+    // Move the center in the opposite direction
+    centerX -= deltaX;
+    centerY -= deltaY;
+    
     render();
 }
 
@@ -148,8 +206,26 @@ function stopDrag() {
 
 function handleZoom(e) {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    scale *= delta;
+    
+    const canvas = currentView === 'mandelbrot' ? mandelbrotCanvas : juliaCanvas;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Get the coordinates before zooming
+    const beforeZoom = screenToFractal(canvas, mouseX, mouseY);
+    
+    // Adjust scale by zoom factor
+    const zoomFactor = e.deltaY > 0 ? 0.8 : 1.25;
+    scale *= zoomFactor;
+    
+    // Get the coordinates after zooming
+    const afterZoom = screenToFractal(canvas, mouseX, mouseY);
+    
+    // Adjust center to keep mouse position fixed
+    centerX += (beforeZoom.x - afterZoom.x);
+    centerY += (beforeZoom.y - afterZoom.y);
+    
     render();
 }
 
@@ -157,14 +233,12 @@ function updateJuliaFromMandelbrot(e) {
     if (config.juliaLock) return;
     
     const rect = mandelbrotCanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
     
-    // Convert screen coordinates to complex coordinates
-    const real = (x * 4 - 2) / scale + offsetX / mandelbrotCanvas.width;
-    const imag = (y * 4 - 2) / scale + offsetY / mandelbrotCanvas.height;
-    
-    config.juliaC = { x: real, y: imag };
+    // Convert to fractal coordinates
+    const coords = screenToFractal(mandelbrotCanvas, mouseX, mouseY);
+    config.juliaC = { x: coords.x, y: coords.y };
     
     // Update the Julia set if it's not currently being viewed
     if (currentView !== 'julia') {
@@ -257,8 +331,10 @@ function renderSpecificCanvas(ctx, fractalFunc) {
     
     for (let px = 0; px < width; px += quality) {
         for (let py = 0; py < height; py += quality) {
-            const x = (px - width/2) / (width/4) / scale + offsetX / width;
-            const y = (py - height/2) / (height/4) / scale + offsetY / height;
+            // Convert pixel coordinates to fractal coordinates
+            const coords = screenToFractal(ctx.canvas, px, py);
+            const x = coords.x;
+            const y = coords.y;
             
             const iter = fractalFunc(x, y);
             
@@ -285,11 +361,24 @@ function renderSpecificCanvas(ctx, fractalFunc) {
     }
     
     ctx.putImageData(imageData, 0, 0);
+    
+    // Update coordinates display
+    updateCoordinatesDisplay(ctx);
+}
+
+function updateCoordinatesDisplay(ctx) {
+    const coordsDisplayId = ctx === mandelbrotCtx ? 'mandelbrot-coords' : 'julia-coords';
+    const coordsDisplay = document.getElementById(coordsDisplayId);
+    
+    if (coordsDisplay) {
+        const centerCoords = { x: centerX, y: centerY };
+        coordsDisplay.textContent = `Center: (${centerCoords.x.toFixed(6)}, ${centerCoords.y.toFixed(6)}) - Scale: ${scale.toFixed(2)}x`;
+    }
 }
 
 function resetView() {
-    offsetX = 0;
-    offsetY = 0;
+    centerX = 0;
+    centerY = 0;
     scale = 1;
     render();
 }
