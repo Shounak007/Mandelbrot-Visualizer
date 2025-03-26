@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Fractal Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="creator-info">
+        <a href="https://shounakmukherjee.netlify.app" class="portfolio-link" target="_blank">Created by Shounak Mukherjee</a>
+    </div>
+    <div class="container">
+        <h1>Interactive Fractal Explorer</h1>
+        <div class="view-controls">
+            <button id="mandelbrotOnly" class="view-btn active">Mandelbrot Only</button>
+            <button id="juliaOnly" class="view-btn">Julia Only</button>
+            <button id="dualView" class="view-btn">Dual View</button>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label for="maxIterations">Max Iterations:</label>
+                <input type="range" id="maxIterations" min="10" max="1000" value="100">
+            </div>
+            <div class="control-group">
+                <label for="colorScheme">Color Scheme:</label>
+                <select id="colorScheme">
+                    <option value="rainbow">Rainbow</option>
+                    <option value="blueFire">Blue Fire</option>
+                    <option value="grayscale">Grayscale</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="juliaLock"> Julia Lock
+                </label>
+            </div>
+            <button id="resetView" class="control-btn">Reset View</button>
+        </div>
+        
+        <div class="canvas-container">
+            <div id="mandelbrot-panel">
+                <canvas id="mandelbrot-canvas" width="500" height="500"></canvas>
+                <div class="coordinates" id="mandelbrot-coords">Click and drag to pan, scroll to zoom</div>
+            </div>
+            <div id="julia-panel">
+                <canvas id="julia-canvas" width="500" height="500"></canvas>
+                <div class="coordinates" id="julia-coords">Hover to update Julia set</div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>How to Use</h2>
+            <ul>
+                <li>Switch between Mandelbrot, Julia, and Dual views using the buttons above</li>
+                <li>Adjust the maximum iterations to control detail level</li>
+                <li>Choose different color schemes for visualization</li>
+                <li>Click and drag on the Mandelbrot set to pan</li>
+                <li>Use the mouse wheel to zoom in/out</li>
+                <li>Hover over the Julia set to update its parameters</li>
+                <li>Use the Julia Lock checkbox to freeze the Julia set parameters</li>
+                <li>Click Reset View to return to the initial view</li>
+            </ul>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/fractal.js') }}"></script>
+</body>
+</html> 
